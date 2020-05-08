@@ -35,6 +35,7 @@ function populateTable(rows) {
   }
 
   document.body.addEventListener('click', onClick);
+  document.body.addEventListener('keyup', globalOnKeyup);
 
   // const win = electron.remote.getCurrentWindow();
   // const table = document.querySelector('table');
@@ -56,13 +57,28 @@ function onClick(event) {
   if (td.tagName !== 'TD' && td.tagName != 'TH') {
     return;
   }
+  switchToInput(td);
+}
+
+function switchToInput(td) {
   const text = td.textContent;
   td.innerHTML = '';
   const input = document.createElement('input');
+  input.setAttribute('data-original', text);
   input.value = text;
   input.addEventListener('keyup', onKeyup);
+  input.addEventListener('input', onInput);
   td.appendChild(input);
   activeInput = input;
+}
+
+function submitInput(input) {
+  save();
+  const td = input.parentElement;
+  const text = input.value;
+  td.innerHTML = "";
+  td.textContent = text;
+  activeInput = null;
 }
 
 function onKeyup(event) {
@@ -71,12 +87,28 @@ function onKeyup(event) {
   }
 }
 
-function submitInput(input) {
-  const td = input.parentElement;
-  const text = input.value;
-  td.innerHTML = "";
-  td.textContent = text;
-  activeInput = null;
+function globalOnKeyup(event) {
+  if (event.keyCode === 27) {
+    /* Esc */
+    if (activeInput) {
+      // Restore the original value of the cell.
+      activeInput.value = activeInput.getAttribute('data-original');
+      submitInput(activeInput);
+    }
+  }
+}
+
+let saveTimeoutId = null;
+
+function onInput(event) {
+  if (saveTimeoutId !== null) {
+    clearTimeout(saveTimeoutId);
+  }
+  saveTimeoutId = setTimeout(save, 500);
+}
+
+function save() {
+  // TODO
 }
 
 const rows = electron.remote.getGlobal('sharedObject').rows;

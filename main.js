@@ -13,6 +13,7 @@ function createWindow() {
     const rows = Papa.parse(data, { skipEmptyLines: true }).data;
     const mainWindow = new BrowserWindow({
       allowRendererProcessReuse: false,
+      /* Hide initially before maximizing. */
       show: false,
       title: 'csvedit ' + path,
       webPreferences: {
