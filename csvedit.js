@@ -1,38 +1,39 @@
 'use strict';
-const electron = require('electron');
 
-let activeInput = null;
+const electron = require('electron');
 
 function populateTable(rows) {
   const thead = document.querySelector('thead');
   const tbody = document.querySelector('tbody');
 
-  const columnWidths = getColumnWidths(rows);
-  const header = document.createElement('tr');
-  for (let i = 0; i < rows[0].length; i++) {
-    const th = document.createElement('th');
-    th.textContent = rows[0][i];
-    th.style.width = columnWidths[i] + "px";
-    header.appendChild(th);
-  }
-  thead.appendChild(header);
+  const nrows = Math.max(rows.length, 100);
+  const ncols = Math.max(rows[0].length, 26);
 
-  for (const row of rows.slice(1)) {
+  for (let i = 0; i < nrows; i++) {
     const tr = document.createElement('tr');
-    for (let i = 0; i < row.length; i++) {
-      const td = document.createElement('td');
-      td.textContent = row[i];
-      td.style.width = columnWidths[i] + "px";
-      td.addEventListener('click', onClick);
+    for (let j = 0; j < ncols; j++) {
+      const td = document.createElement(i === 0 ? 'th' : 'td');
+      if (i < rows.length && j < rows[i].length) {
+        td.textContent = rows[i][j];
+      }
       tr.appendChild(td);
     }
-    tbody.appendChild(tr);
+
+    if (i === 0) {
+      thead.appendChild(tr);
+    } else {
+      tbody.appendChild(tr);
+    }
   }
 
-  const win = electron.remote.getCurrentWindow();
-  const table = document.querySelector('table');
+  document.body.addEventListener('click', onClick);
+
+  // const win = electron.remote.getCurrentWindow();
+  // const table = document.querySelector('table');
   // win.setContentSize(table.offsetWidth, table.offsetHeight);
 }
+
+let activeInput = null;
 
 function onClick(event) {
   if (activeInput !== null) {
@@ -44,8 +45,11 @@ function onClick(event) {
   }
 
   const td = event.target;
+  if (td.tagName !== 'TD' && td.tagName != 'TH') {
+    return;
+  }
   const text = td.textContent;
-  td.innerHTML = "";
+  td.innerHTML = '';
   const input = document.createElement('input');
   input.value = text;
   input.addEventListener('keyup', onKeyup);
@@ -65,28 +69,6 @@ function submitInput(input) {
   td.innerHTML = "";
   td.textContent = text;
   activeInput = null;
-}
-
-function getColumnWidths(rows) {
-  const columnWidths = [];
-  for (let i = 0; i < rows[0].length; i++) {
-    const width = getMaxWidth(rows, i);
-    columnWidths.push(width);
-  }
-  return columnWidths;
-}
-
-function getMaxWidth(rows, colno) {
-  let maxWidth = 0;
-  for (const row of rows) {
-    maxWidth = Math.max(getTextWidth(row[colno]), maxWidth);
-  }
-  return maxWidth;
-}
-
-function getTextWidth(text) {
-  // This only works with a fixed-width font.
-  return text.length * 8.5 + /* padding */ 15;
 }
 
 const rows = electron.remote.getGlobal('sharedObject').rows;

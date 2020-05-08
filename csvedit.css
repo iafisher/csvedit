@@ -3,6 +3,7 @@
 }
 
 html, body {
+  height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -19,12 +20,24 @@ table {
   border-collapse: collapse;
 }
 
+tr {
+  height: 30px;
+}
+
 th, td {
   text-align: center;
   padding: 2px 5px;
-  border: 1px solid black;
+  border: 1px solid lightgray;
+  width: 150px;
+  overflow: hidden;
+}
+
+th {
+  background-color: whitesmoke;
 }
 
 th input, td input {
   width: 100%;
+  font-size: 14px;
+  font-family: monospace;
 }
