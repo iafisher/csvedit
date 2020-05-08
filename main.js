@@ -3,8 +3,9 @@ const fs = require('fs');
 const path = require('path')
 const Papa = require('papaparse');
 
-function createWindow () {
-  fs.readFile(process.argv[2], { encoding: 'utf-8' }, (err, data) => {
+function createWindow() {
+  const path = process.argv[2];
+  fs.readFile(path, { encoding: 'utf-8' }, (err, data) => {
     if (err) {
       throw err;
     }
@@ -13,6 +14,7 @@ function createWindow () {
     const mainWindow = new BrowserWindow({
       allowRendererProcessReuse: false,
       show: false,
+      title: 'csvedit ' + path,
       webPreferences: {
         nodeIntegration: true,
       }
@@ -22,7 +24,7 @@ function createWindow () {
     mainWindow.show();
 
     global.sharedObject = {
-      path: process.argv[2],
+      path: path,
       rows: rows,
       bounds: mainWindow.getContentBounds(),
     };
@@ -34,7 +36,7 @@ function createWindow () {
 
 app.whenReady().then(createWindow);
 
-app.on('window-all-closed', function () {
+app.on('window-all-closed', function() {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
@@ -42,7 +44,7 @@ app.on('window-all-closed', function () {
   }
 })
 
-app.on('activate', function () {
+app.on('activate', function() {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {

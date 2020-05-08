@@ -81,5 +81,4 @@ function submitInput(input) {
 
 const rows = electron.remote.getGlobal('sharedObject').rows;
 const path = electron.remote.getGlobal('sharedObject').path;
-document.title = 'csvedit ' + path;
 populateTable(rows);
