@@ -11,8 +11,16 @@ function populateTable(rows) {
 
   for (let i = 0; i < nrows; i++) {
     const tr = document.createElement('tr');
+    const childType = i === 0 ? 'th' : 'td';
+    const number = document.createElement(childType);
+    number.classList.add('number');
+    if (i > 0) {
+      number.textContent = '' + i;
+    }
+    tr.appendChild(number);
+
     for (let j = 0; j < ncols; j++) {
-      const td = document.createElement(i === 0 ? 'th' : 'td');
+      const td = document.createElement(childType);
       if (i < rows.length && j < rows[i].length) {
         td.textContent = rows[i][j];
       }

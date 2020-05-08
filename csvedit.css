@@ -36,6 +36,13 @@ th {
   background-color: whitesmoke;
 }
 
+.number {
+  width: 50px;
+  text-align: right;
+  padding-right: 8px;
+  background-color: whitesmoke;
+}
+
 th input, td input {
   width: 100%;
   font-size: 14px;
