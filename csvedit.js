@@ -2,6 +2,7 @@
 
 const electron = require('electron');
 const fs = require('fs');
+const path = require('path');
 const tmp = require('tmp');
 const Papa = require('papaparse');
 
@@ -231,16 +232,25 @@ function save() {
     return;
   }
 
-  tmp.file({ postfix: '.csv' }, (err, path, fd, cleanupCallback) => {
-    if (err) {
-      throw err;
-    }
+  tmp.file({ postfix: '.csv' }, (err, tmppath, fd, cleanupCallback) => {
+    if (err) throw err;
 
-    console.log('Saving to ' + path);
-    fs.write(fd, data + '\n', 0, 'utf8', () => {
-      console.log('Overwriting ' + ORIGINAL_PATH);
-      fs.rename(path, ORIGINAL_PATH, () => {
-        LAST_SAVED = data;
+    const basename = path.basename(ORIGINAL_PATH, '.csv');
+    const backupPath = "/tmp/" + basename + "-" + Date.now() + ".csv";
+    console.log('Saving backup to ' + backupPath);
+    fs.copyFile(ORIGINAL_PATH, backupPath, err => {
+      if (err) throw err;
+
+      console.log('Saving to ' + path);
+      fs.write(fd, data + '\n', 0, 'utf8', err => {
+        if (err) throw err;
+
+        console.log('Overwriting ' + ORIGINAL_PATH);
+        fs.rename(tmppath, ORIGINAL_PATH, err => {
+          if (err) throw err;
+
+          LAST_SAVED = data;
+        });
       });
     });
   });
