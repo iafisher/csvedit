@@ -180,9 +180,10 @@ function handleInsertModeKeystroke(event) {
     }
   } else if (event.keyCode === 40) {
     // Down: Edit the cell below.
-    // TODO: This will fail at the bottom of the table.
-    submitInput(activeInput);
-    switchToCell(getCell(row + 1, column));
+    if (row + 1 < TABLE_HEIGHT) {
+      submitInput(activeInput);
+      switchToCell(getCell(row + 1, column));
+    }
   } else if (event.keyCode === 9) {
     if (event.shiftKey) {
       // Shift + Tab: Edit the cell to the left.
@@ -192,9 +193,10 @@ function handleInsertModeKeystroke(event) {
       }
     } else {
       // Tab: Edit the cell to the right.
-      // TODO: This will fail at the right edge of the table.
-      submitInput(activeInput);
-      switchToCell(getCell(row, column + 1));
+      if (column + 1 < TABLE_WIDTH) {
+        submitInput(activeInput);
+        switchToCell(getCell(row, column + 1));
+      }
     }
   }
 }
