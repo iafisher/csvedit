@@ -1,10 +1,14 @@
 'use strict';
 
 const electron = require('electron');
+const fs = require('fs');
+const tmp = require('tmp');
+const Papa = require('papaparse');
 
 
 let ROWS = electron.remote.getGlobal('sharedObject').rows;
-let PATH = electron.remote.getGlobal('sharedObject').path;
+let LAST_SAVED = stringifyRows(ROWS);
+const ORIGINAL_PATH = electron.remote.getGlobal('sharedObject').path;
 
 
 /**
@@ -83,6 +87,7 @@ function switchToCell(td) {
   input.addEventListener('input', onInput);
   td.appendChild(input);
   activeInput = input;
+  activeInput.focus();
 }
 
 
@@ -124,7 +129,10 @@ function globalOnKeyup(event) {
   if (event.keyCode === 27) {
     /* Esc */
     // Restore the original value of the cell.
-    activeInput.value = activeInput.getAttribute('data-original');
+    const originalData = activeInput.getAttribute('data-original');
+    if (originalData !== "") {
+      activeInput.value = originalData;
+    }
     submitInput(activeInput);
   } else if (event.keyCode === 38) {
     /* Up */
@@ -152,6 +160,9 @@ function globalOnKeyup(event) {
 }
 
 
+/**
+ * Returns the table cell at the given position.
+ */
 function getCell(i, j) {
   if (i === 0) {
     return document.querySelector('thead').children[0].children[j + 1];
@@ -161,11 +172,17 @@ function getCell(i, j) {
 }
 
 
+/**
+ * Returns the row number of the table cell.
+ */
 function getRow(cell) {
   return parseInt(cell.getAttribute('data-row'));
 }
 
 
+/**
+ * Returns the column number of the table cell.
+ */
 function getColumn(cell) {
   return parseInt(cell.getAttribute('data-column'));
 }
@@ -208,11 +225,33 @@ function setValue(input) {
  * Saves the table to the original CSV file.
  */
 function save() {
-  // TODO: Write ROWS to a temporary file using Papa.unparse, then move the temporary
-  // file atomically to the original location.
-  //
-  // Temporary files: https://github.com/raszi/node-tmp
-  // Papa.unparse will require { newline: '\n' }
+  const data = stringifyRows(ROWS);
+  if (data === LAST_SAVED) {
+    console.log('Skipping save as contents of table have not changed.');
+    return;
+  }
+
+  tmp.file({ postfix: '.csv' }, (err, path, fd, cleanupCallback) => {
+    if (err) {
+      throw err;
+    }
+
+    console.log('Saving to ' + path);
+    fs.write(fd, data + '\n', 0, 'utf8', () => {
+      console.log('Overwriting ' + ORIGINAL_PATH);
+      fs.rename(path, ORIGINAL_PATH, () => {
+        LAST_SAVED = data;
+      });
+    });
+  });
+}
+
+
+/**
+ * Converts the rows into a string, to be written to a file.
+ */
+function stringifyRows(rows) {
+  return Papa.unparse(rows, { newline: '\n' }).trim();
 }
 
 

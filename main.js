@@ -27,7 +27,6 @@ function createWindow() {
     global.sharedObject = {
       path: fpath,
       rows: rows,
-      bounds: mainWindow.getContentBounds(),
     };
 
     mainWindow.loadFile('index.html');
