@@ -2,6 +2,9 @@
 
 const electron = require('electron');
 
+let ROWS = electron.remote.getGlobal('sharedObject').rows;
+let PATH = electron.remote.getGlobal('sharedObject').path;
+
 function populateTable(rows) {
   const thead = document.querySelector('thead');
   const tbody = document.querySelector('tbody');
@@ -21,6 +24,8 @@ function populateTable(rows) {
 
     for (let j = 0; j < ncols; j++) {
       const td = document.createElement(childType);
+      td.setAttribute("data-i", i);
+      td.setAttribute("data-j", j);
       if (i < rows.length && j < rows[i].length) {
         td.textContent = rows[i][j];
       }
@@ -73,9 +78,10 @@ function switchToInput(td) {
 }
 
 function submitInput(input) {
+  setValue(input);
   save();
   const td = input.parentElement;
-  const text = input.value;
+  const text = input.value.trim();
   td.innerHTML = "";
   td.textContent = text;
   activeInput = null;
@@ -101,16 +107,31 @@ function globalOnKeyup(event) {
 let saveTimeoutId = null;
 
 function onInput(event) {
+  setValue(event.target);
   if (saveTimeoutId !== null) {
     clearTimeout(saveTimeoutId);
   }
   saveTimeoutId = setTimeout(save, 500);
 }
 
-function save() {
-  // TODO
+function setValue(input) {
+  const i = parseInt(input.parentElement.getAttribute('data-i'));
+  const j = parseInt(input.parentElement.getAttribute('data-j'));
+
+  // Expand the table if necessary.
+  while (i >= ROWS.length) {
+    ROWS.push([]);
+  }
+
+  while (j >= ROWS[i].length) {
+    ROWS[i].push('');
+  }
+
+  ROWS[i][j] = input.value.trim();
 }
 
-const rows = electron.remote.getGlobal('sharedObject').rows;
-const path = electron.remote.getGlobal('sharedObject').path;
-populateTable(rows);
+function save() {
+  console.log(ROWS);
+}
+
+populateTable(ROWS);
