@@ -53,7 +53,7 @@ function populateTable(rows) {
   }
 
   document.body.addEventListener('click', onClick);
-  document.body.addEventListener('keyup', globalOnKeyup);
+  document.body.addEventListener('keyup', onKeyup);
 }
 
 
@@ -87,7 +87,6 @@ function switchToCell(td) {
   const input = document.createElement('input');
   input.setAttribute('data-original', text);
   input.value = text;
-  input.addEventListener('keyup', onKeyup);
   input.addEventListener('input', onInput);
   td.appendChild(input);
   activeInput = input;
@@ -110,19 +109,9 @@ function submitInput(input) {
 
 
 /**
- * Handles keyboard events for cell inputs.
+ * Handles keyboard events.
  */
 function onKeyup(event) {
-  if (event.keyCode === 13) {
-    submitInput(event.target);
-  }
-}
-
-
-/**
- * Handles keyboard events globally.
- */
-function globalOnKeyup(event) {
   if (activeInput) {
     handleInsertModeKeystroke(event);
   } else {
@@ -165,7 +154,10 @@ function handleInsertModeKeystroke(event) {
   const row = getRow(activeInput.parentElement);
   const column = getColumn(activeInput.parentElement);
 
-  if (event.keyCode === 27) {
+  if (event.keyCode === 13) {
+    // Enter: Finish editing and save the value of the cell.
+    submitInput(activeInput);
+  } else if (event.keyCode === 27) {
     // Esc: Finish editing and restore the original value of the cell.
     const originalData = activeInput.getAttribute('data-original');
     if (originalData !== "") {
