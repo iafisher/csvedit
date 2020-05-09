@@ -15,7 +15,7 @@ function createWindow() {
       allowRendererProcessReuse: false,
       /* Hide initially before maximizing. */
       show: false,
-      title: 'csvedit ' + path,
+      title: 'csvedit ' + fpath,
       webPreferences: {
         nodeIntegration: true,
       }
