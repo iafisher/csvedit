@@ -136,13 +136,14 @@ function globalOnKeyup(event) {
  */
 function handleNormalModeKeystroke(event) {
   if (event.keyCode === 13) {
-    /* Enter */
+    // Enter: Edit the currently focused cell.
     const cell = document.activeElement;
     if (cell.tagName !== "TD" && cell.tagName !== "TH") {
       return;
     }
     switchToCell(cell);
   } else if (event.keyCode === 65 && event.shiftKey) {
+    // Shift + A: Edit first cell in next empty row.
     let lastNonEmptyRow = ROWS.length - 1;
     while (lastNonEmptyRow >= 1 && ROWS[lastNonEmptyRow][0] === '') {
       lastNonEmptyRow--;
@@ -163,32 +164,33 @@ function handleInsertModeKeystroke(event) {
   const column = getColumn(activeInput.parentElement);
 
   if (event.keyCode === 27) {
-    /* Esc */
-    // Restore the original value of the cell.
+    // Esc: Finish editing and restore the original value of the cell.
     const originalData = activeInput.getAttribute('data-original');
     if (originalData !== "") {
       activeInput.value = originalData;
     }
     submitInput(activeInput);
   } else if (event.keyCode === 38) {
-    /* Up */
+    // Up: Edit the cell above.
     if (row > 0) {
       submitInput(activeInput);
       switchToCell(getCell(row - 1, column));
     }
   } else if (event.keyCode === 40) {
-    /* Down */
+    // Down: Edit the cell below.
+    // TODO: This will fail at the bottom of the table.
     submitInput(activeInput);
     switchToCell(getCell(row + 1, column));
   } else if (event.keyCode === 9) {
     if (event.shiftKey) {
-      /* Shift + Tab */
+      // Shift + Tab: Edit the cell to the left.
       if (column > 0) {
         submitInput(activeInput);
         switchToCell(getCell(row, column - 1));
       }
     } else {
-      /* Tab */
+      // Tab: Edit the cell to the right.
+      // TODO: This will fail at the right edge of the table.
       submitInput(activeInput);
       switchToCell(getCell(row, column + 1));
     }
