@@ -4,8 +4,8 @@ const path = require('path')
 const Papa = require('papaparse');
 
 function createWindow() {
-  const path = process.argv[2];
-  fs.readFile(path, { encoding: 'utf-8' }, (err, data) => {
+  const fpath = process.argv[2];
+  fs.readFile(fpath, { encoding: 'utf-8' }, (err, data) => {
     if (err) {
       throw err;
     }
@@ -25,7 +25,7 @@ function createWindow() {
     mainWindow.show();
 
     global.sharedObject = {
-      path: path,
+      path: fpath,
       rows: rows,
       bounds: mainWindow.getContentBounds(),
     };
