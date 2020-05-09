@@ -2,9 +2,14 @@
 
 const electron = require('electron');
 
+
 let ROWS = electron.remote.getGlobal('sharedObject').rows;
 let PATH = electron.remote.getGlobal('sharedObject').path;
 
+
+/**
+ * Renders the spreadsheet initially with the CSV file's content.
+ */
 function populateTable(rows) {
   const thead = document.querySelector('thead');
   const tbody = document.querySelector('tbody');
@@ -41,14 +46,13 @@ function populateTable(rows) {
 
   document.body.addEventListener('click', onClick);
   document.body.addEventListener('keyup', globalOnKeyup);
-
-  // const win = electron.remote.getCurrentWindow();
-  // const table = document.querySelector('table');
-  // win.setContentSize(table.offsetWidth, table.offsetHeight);
 }
 
-let activeInput = null;
 
+let activeInput = null;
+/**
+ * Handles click events for table cells.
+ */
 function onClick(event) {
   if (activeInput !== null) {
     if (activeInput === event.target) {
@@ -65,6 +69,10 @@ function onClick(event) {
   switchToInput(td);
 }
 
+
+/**
+ * Switches the input focus to the given cell.
+ */
 function switchToInput(td) {
   const text = td.textContent;
   td.innerHTML = '';
@@ -77,6 +85,10 @@ function switchToInput(td) {
   activeInput = input;
 }
 
+
+/**
+ * Submits the cell's input.
+ */
 function submitInput(input) {
   setValue(input);
   save();
@@ -87,12 +99,20 @@ function submitInput(input) {
   activeInput = null;
 }
 
+
+/**
+ * Handles keyboard events for cell inputs.
+ */
 function onKeyup(event) {
   if (event.keyCode === 13) {
     submitInput(event.target);
   }
 }
 
+
+/**
+ * Handles keyboard events globally.
+ */
 function globalOnKeyup(event) {
   if (event.keyCode === 27) {
     /* Esc */
@@ -104,8 +124,11 @@ function globalOnKeyup(event) {
   }
 }
 
-let saveTimeoutId = null;
 
+let saveTimeoutId = null;
+/**
+ * Handles input to table cells.
+ */
 function onInput(event) {
   setValue(event.target);
   if (saveTimeoutId !== null) {
@@ -114,6 +137,10 @@ function onInput(event) {
   saveTimeoutId = setTimeout(save, 500);
 }
 
+
+/**
+ * Sets the value of the cell in the in-memory copy, ROWS.
+ */
 function setValue(input) {
   const i = parseInt(input.parentElement.getAttribute('data-i'));
   const j = parseInt(input.parentElement.getAttribute('data-j'));
@@ -130,8 +157,17 @@ function setValue(input) {
   ROWS[i][j] = input.value.trim();
 }
 
+
+/**
+ * Saves the table to the original CSV file.
+ */
 function save() {
-  console.log(ROWS);
+  // TODO: Write ROWS to a temporary file using Papa.unparse, then move the temporary
+  // file atomically to the original location.
+  //
+  // Temporary files: https://github.com/raszi/node-tmp
+  // Papa.unparse will require { newline: '\n' }
 }
+
 
 populateTable(ROWS);
