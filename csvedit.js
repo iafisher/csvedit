@@ -29,8 +29,8 @@ function populateTable(rows) {
 
     for (let j = 0; j < ncols; j++) {
       const td = document.createElement(childType);
-      td.setAttribute("data-i", i);
-      td.setAttribute("data-j", j);
+      td.setAttribute("data-row", i);
+      td.setAttribute("data-column", j);
       if (i < rows.length && j < rows[i].length) {
         td.textContent = rows[i][j];
       }
@@ -66,14 +66,14 @@ function onClick(event) {
   if (td.tagName !== 'TD' && td.tagName != 'TH') {
     return;
   }
-  switchToInput(td);
+  switchToCell(td);
 }
 
 
 /**
  * Switches the input focus to the given cell.
  */
-function switchToInput(td) {
+function switchToCell(td) {
   const text = td.textContent;
   td.innerHTML = '';
   const input = document.createElement('input');
@@ -114,14 +114,60 @@ function onKeyup(event) {
  * Handles keyboard events globally.
  */
 function globalOnKeyup(event) {
+  if (!activeInput) {
+    return;
+  }
+
+  const row = getRow(activeInput.parentElement);
+  const column = getColumn(activeInput.parentElement);
+
   if (event.keyCode === 27) {
     /* Esc */
-    if (activeInput) {
-      // Restore the original value of the cell.
-      activeInput.value = activeInput.getAttribute('data-original');
+    // Restore the original value of the cell.
+    activeInput.value = activeInput.getAttribute('data-original');
+    submitInput(activeInput);
+  } else if (event.keyCode === 38) {
+    /* Up */
+    if (row > 0) {
       submitInput(activeInput);
+      switchToCell(getCell(row - 1, column));
+    }
+  } else if (event.keyCode === 40) {
+    /* Down */
+    submitInput(activeInput);
+    switchToCell(getCell(row + 1, column));
+  } else if (event.keyCode === 9) {
+    if (event.shiftKey) {
+      /* Shift + Tab */
+      if (column > 0) {
+        submitInput(activeInput);
+        switchToCell(getCell(row, column - 1));
+      }
+    } else {
+      /* Tab */
+      submitInput(activeInput);
+      switchToCell(getCell(row, column + 1));
     }
   }
+}
+
+
+function getCell(i, j) {
+  if (i === 0) {
+    return document.querySelector('thead').children[0].children[j + 1];
+  } else {
+    return document.querySelector('tbody').children[i - 1].children[j + 1];
+  }
+}
+
+
+function getRow(cell) {
+  return parseInt(cell.getAttribute('data-row'));
+}
+
+
+function getColumn(cell) {
+  return parseInt(cell.getAttribute('data-column'));
 }
 
 
@@ -142,19 +188,19 @@ function onInput(event) {
  * Sets the value of the cell in the in-memory copy, ROWS.
  */
 function setValue(input) {
-  const i = parseInt(input.parentElement.getAttribute('data-i'));
-  const j = parseInt(input.parentElement.getAttribute('data-j'));
+  const row = getRow(input.parentElement);
+  const column = getColumn(input.parentElement);
 
   // Expand the table if necessary.
-  while (i >= ROWS.length) {
+  while (row >= ROWS.length) {
     ROWS.push([]);
   }
 
-  while (j >= ROWS[i].length) {
-    ROWS[i].push('');
+  while (column >= ROWS[row].length) {
+    ROWS[row].push('');
   }
 
-  ROWS[i][j] = input.value.trim();
+  ROWS[row][column] = input.value.trim();
 }
 
 
