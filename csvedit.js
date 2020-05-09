@@ -36,6 +36,7 @@ function populateTable(rows) {
       const td = document.createElement(childType);
       td.setAttribute("data-row", i);
       td.setAttribute("data-column", j);
+      td.setAttribute("tabindex", 0);
       if (i < rows.length && j < rows[i].length) {
         td.textContent = rows[i][j];
       }
@@ -120,10 +121,44 @@ function onKeyup(event) {
  * Handles keyboard events globally.
  */
 function globalOnKeyup(event) {
-  if (!activeInput) {
-    return;
+  if (activeInput) {
+    handleInsertModeKeystroke(event);
+  } else {
+    handleNormalModeKeystroke(event);
   }
+}
 
+
+/**
+ * Handles keyboard events while in normal mode.
+ *
+ * Normal mode is when no cell is being edited (analogous to vim's normal mode).
+ */
+function handleNormalModeKeystroke(event) {
+  if (event.keyCode === 13) {
+    /* Enter */
+    const cell = document.activeElement;
+    if (cell.tagName !== "TD" && cell.tagName !== "TH") {
+      return;
+    }
+    switchToCell(cell);
+  } else if (event.keyCode === 65 && event.shiftKey) {
+    let lastNonEmptyRow = ROWS.length - 1;
+    while (lastNonEmptyRow >= 1 && ROWS[lastNonEmptyRow][0] === '') {
+      lastNonEmptyRow--;
+    }
+
+    if (lastNonEmptyRow >= 1) {
+      switchToCell(getCell(lastNonEmptyRow + 1, 0));
+    }
+  }
+}
+
+
+/**
+ * Handles keyboard events while in insert mode.
+ */
+function handleInsertModeKeystroke(event) {
   const row = getRow(activeInput.parentElement);
   const column = getColumn(activeInput.parentElement);
 
