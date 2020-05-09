@@ -30,7 +30,7 @@ function createWindow() {
     };
 
     mainWindow.loadFile('index.html');
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
   });
 }
 
