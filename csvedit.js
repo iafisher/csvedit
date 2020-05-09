@@ -8,6 +8,8 @@ const Papa = require('papaparse');
 
 
 let ROWS = electron.remote.getGlobal('sharedObject').rows;
+let TABLE_HEIGHT = 0;
+let TABLE_WIDTH = 0;
 let LAST_SAVED = stringifyRows(ROWS);
 const ORIGINAL_PATH = electron.remote.getGlobal('sharedObject').path;
 
@@ -19,10 +21,10 @@ function populateTable(rows) {
   const thead = document.querySelector('thead');
   const tbody = document.querySelector('tbody');
 
-  const nrows = Math.max(rows.length, 100);
-  const ncols = Math.max(rows[0].length, 26);
+  TABLE_HEIGHT = Math.max(rows.length, 100);
+  TABLE_WIDTH = Math.max(maxRowLength(rows), 26);
 
-  for (let i = 0; i < nrows; i++) {
+  for (let i = 0; i < TABLE_HEIGHT; i++) {
     const tr = document.createElement('tr');
     const childType = i === 0 ? 'th' : 'td';
     const number = document.createElement(childType);
@@ -32,7 +34,7 @@ function populateTable(rows) {
     }
     tr.appendChild(number);
 
-    for (let j = 0; j < ncols; j++) {
+    for (let j = 0; j < TABLE_WIDTH; j++) {
       const td = document.createElement(childType);
       td.setAttribute("data-row", i);
       td.setAttribute("data-column", j);
@@ -278,7 +280,7 @@ function save() {
     fs.copyFile(ORIGINAL_PATH, backupPath, err => {
       if (err) throw err;
 
-      console.log('Saving to ' + path);
+      console.log('Saving to ' + tmppath);
       fs.write(fd, data + '\n', 0, 'utf8', err => {
         if (err) throw err;
 
@@ -298,7 +300,47 @@ function save() {
  * Converts the rows into a string, to be written to a file.
  */
 function stringifyRows(rows) {
-  return Papa.unparse(rows, { newline: '\n' }).trim();
+  // Remove empty cells from the end of each row, and empty rows from the end of the
+  // table. Empty rows that are between non-empty rows are not removed.
+  let nonEmptyRows = [];
+  for (let i = rows.length - 1; i >= 0; i--) {
+    let row = removeTrailingEmptyCells(rows[i]);
+    if (row.length > 0 || nonEmptyRows.length > 0) {
+      nonEmptyRows.push(row);
+    }
+  }
+  nonEmptyRows.reverse();
+  return Papa.unparse(nonEmptyRows, { newline: '\n' }).trim();
+}
+
+
+/**
+ * Returns a new row with any empty cells at the end removed.
+ *
+ * Additionally, leading and trailing whitespace is removed from each cell.
+ */
+function removeTrailingEmptyCells(row) {
+  const newRow = [];
+  for (let i = row.length - 1; i >= 0; i--) {
+    const value = row[i].trim();
+    if (newRow.length > 0 || value !== '') {
+      newRow.push(value);
+    }
+  }
+  newRow.reverse();
+  return newRow;
+}
+
+
+/**
+ * Returns the length of the longest row.
+ */
+function maxRowLength(rows) {
+  let max = 0;
+  for (const row of rows) {
+    max = Math.max(row.length, max);
+  }
+  return max;
 }
 
 
