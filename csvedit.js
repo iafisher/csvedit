@@ -184,19 +184,17 @@ function handleInsertModeKeystroke(event) {
       submitInput(activeInput);
       switchToCell(getCell(row + 1, column));
     }
-  } else if (event.keyCode === 9) {
-    if (event.shiftKey) {
-      // Shift + Tab: Edit the cell to the left.
-      if (column > 0) {
-        submitInput(activeInput);
-        switchToCell(getCell(row, column - 1));
-      }
-    } else {
-      // Tab: Edit the cell to the right.
-      if (column + 1 < TABLE_WIDTH) {
-        submitInput(activeInput);
-        switchToCell(getCell(row, column + 1));
-      }
+  } else if (event.keyCode === 37 && event.shiftKey) {
+    // Shift + Left: Edit the cell to the left.
+    if (column > 0) {
+      submitInput(activeInput);
+      switchToCell(getCell(row, column - 1));
+    }
+  } else if (event.keyCode === 39 && event.shiftKey) {
+    // Shift + Right: Edit the cell to the left.
+    if (column + 1 < TABLE_WIDTH) {
+      submitInput(activeInput);
+      switchToCell(getCell(row, column + 1));
     }
   }
 }
