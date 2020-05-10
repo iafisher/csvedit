@@ -74,6 +74,9 @@ function onClick(event) {
   if (td.tagName !== 'TD' && td.tagName != 'TH') {
     return;
   }
+  if (td.classList.contains("number")) {
+    return;
+  }
   switchToCell(td);
 }
 
