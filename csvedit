@@ -1,3 +1,116 @@
-#!/bin/bash
+#!/usr/bin/env python3
+import argparse
+import csv
+import io
+import readline
+import sys
 
-npm run start -- "$@"
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename")
+    parser.add_argument("--edit", action="store_true")
+    args = parser.parse_args()
+
+    csv.register_dialect("custom", lineterminator="\n")
+    if args.edit:
+        main_edit(args.filename)
+    else:
+        main_append(args.filename)
+
+
+def main_edit(filename):
+    fieldnames, rows = read_rows(filename)
+    # TODO(2020-05-22): Allow searching of rows.
+    # TODO(2020-05-22): Print the rows in a nicer format.
+    rowno = pick([stringify_row(row.values()).rstrip().rstrip(",") for row in rows])
+    old_row = rows[rowno]
+    new_row = {}
+    for field in fieldnames:
+        # TODO(2020-05-22): Display long old values better.
+        old_value = old_row[field]
+        if not old_value:
+            current = "currently blank"
+        elif (
+            "\r" in old_value
+            or "\n" in old_value
+            or any(not c.isprintable() for c in old_value)
+        ):
+            current = f"current: {old_value!r}"
+        else:
+            current = f"current: {old_value}"
+
+        value = getinput(f"{field} ({current})? ")
+        new_row[field] = value if value else old_row[field]
+
+    rows[rowno] = new_row
+
+    # Write to a buffer first, so that the file isn't left in a corrupt state if an
+    # exception occurs.
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, dialect="custom", fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+
+    with open(filename, "w") as f:
+        f.write(buffer.getvalue())
+
+
+def main_append(filename):
+    fieldnames, rows = read_rows(filename)
+
+    row = []
+    for field in fieldnames:
+        # TODO(2020-05-22): Prompt the user with some sample values.
+        value = getinput(f"{field}? ")
+        row.append(value)
+
+    with open(filename, "a") as f:
+        f.write(stringify_row(row))
+
+
+def pick(choices):
+    for number, choice in enumerate(choices, start=1):
+        print(f"({number}) {choice})")
+
+    print()
+    while True:
+        response = getinput("? ")
+        try:
+            index = int(response)
+        except ValueError:
+            raise ValueError(response)
+
+        if 1 <= index <= len(choices):
+            return index - 1
+
+
+def read_rows(filename):
+    with open(filename, newline="") as csvfile:
+        reader = csv.DictReader(csvfile, dialect="custom")
+        fieldnames = reader.fieldnames
+        rows = list(reader)
+
+    return (fieldnames, rows)
+
+
+def stringify_row(row):
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, dialect="custom")
+    writer.writerow(row)
+    return buffer.getvalue()
+
+
+def getinput(*args, **kwargs):
+    try:
+        return input(*args, **kwargs).strip()
+    except EOFError:
+        print()
+        return ""
+    except KeyboardInterrupt:
+        print()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
