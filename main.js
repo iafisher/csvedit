@@ -21,7 +21,6 @@ function createWindow() {
       }
     });
 
-    mainWindow.maximize();
     mainWindow.show();
 
     global.sharedObject = {
