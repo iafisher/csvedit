@@ -43,6 +43,11 @@ def main():
 
 def main_edit(filename):
     fieldnames, rows = read_rows(filename)
+
+    if not rows:
+        print("The file contains no rows.")
+        sys.exit(0)
+
     # TODO(2020-05-22): Allow searching of rows... maybe.
     # TODO(2020-05-22): Print the rows in a nicer format.
     rowno = pick([stringify_row(row.values()).rstrip().rstrip(",") for row in rows])
@@ -104,6 +109,9 @@ def pick(choices):
     print()
     while True:
         response = getinput("? ")
+        if not response:
+            continue
+
         try:
             index = int(response)
         except ValueError:
