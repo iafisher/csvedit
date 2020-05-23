@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+"""
+A small CLI tool to conveniently edit CSV files.
+
+It supports editing existing rows and appending new rows. It assumes that the first row
+is a header row with the names of each column. It is intended for making quick, simple
+edits to CSV files more quickly than spreadsheet programs like LibreOffice Writer and
+more conveniently than text editors like Vim.
+
+There are many things that it cannot do, including:
+
+    - editing the header row
+    - changing the order of rows or columns
+    - deleting columns or rows
+    - adding new columns
+
+Author:  Ian Fisher (iafisher@protonmail.com)
+Version: May 2020
+"""
 import argparse
 import csv
 import io
@@ -13,15 +31,19 @@ def main():
     args = parser.parse_args()
 
     csv.register_dialect("custom", lineterminator="\n")
-    if args.edit:
-        main_edit(args.filename)
-    else:
-        main_append(args.filename)
+    try:
+        if args.edit:
+            main_edit(args.filename)
+        else:
+            main_append(args.filename)
+    except CancelError:
+        print("Operation aborted, file not changed.")
+        sys.exit(2)
 
 
 def main_edit(filename):
     fieldnames, rows = read_rows(filename)
-    # TODO(2020-05-22): Allow searching of rows.
+    # TODO(2020-05-22): Allow searching of rows... maybe.
     # TODO(2020-05-22): Print the rows in a nicer format.
     rowno = pick([stringify_row(row.values()).rstrip().rstrip(",") for row in rows])
     old_row = rows[rowno]
@@ -61,8 +83,14 @@ def main_append(filename):
 
     row = []
     for field in fieldnames:
-        # TODO(2020-05-22): Prompt the user with some sample values.
-        value = getinput(f"{field}? ")
+        sample_values = get_sample_values(field, rows)
+        if sample_values:
+            sample_values = ", ".join(sample_values)
+            prompt = f"{field} (for example: {sample_values})? "
+        else:
+            prompt = f"{field}? "
+
+        value = getinput(prompt)
         row.append(value)
 
     with open(filename, "a") as f:
@@ -83,6 +111,16 @@ def pick(choices):
 
         if 1 <= index <= len(choices):
             return index - 1
+
+
+def get_sample_values(field, rows):
+    values = [row[field] for row in rows]
+    values = [v for v in values if v]
+    values = [v for v in values if len(v) < 15]
+    values = [v for v in values if "," not in v]
+    values = [v for v in values if "\n" not in v and "\r" not in v]
+    values = [v for v in values if all(c.isprintable() for c in v)]
+    return values[-3:]
 
 
 def read_rows(filename):
@@ -109,7 +147,11 @@ def getinput(*args, **kwargs):
         return ""
     except KeyboardInterrupt:
         print()
-        sys.exit(1)
+        raise CancelError
+
+
+class CancelError(Exception):
+    pass
 
 
 if __name__ == "__main__":
