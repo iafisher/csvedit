@@ -22,6 +22,7 @@ import csv
 import io
 import readline
 import sys
+from collections import OrderedDict
 
 
 def main():
@@ -128,7 +129,9 @@ def get_sample_values(field, rows):
     values = [v for v in values if "," not in v]
     values = [v for v in values if "\n" not in v and "\r" not in v]
     values = [v for v in values if all(c.isprintable() for c in v)]
-    return values[-3:]
+    # OrderedDict functioning as an ordered set, to return the last three unique values.
+    d = OrderedDict([(v, True) for v in values])
+    return list(d.keys())[-3:]
 
 
 def read_rows(filename):
